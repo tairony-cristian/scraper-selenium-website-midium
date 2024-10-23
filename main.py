@@ -13,6 +13,9 @@ import os
 # Function to save data and display total records
 def save_data(results, df_existing, file_name, existing_urls_set, existing_urls_list):
     if results:
+        print("Pausing before saving data...")
+        time.sleep(2)
+        
         df_new = pd.DataFrame(results)
         df_combined = pd.concat([df_existing, df_new], ignore_index=True)
         df_combined.to_csv(file_name, index=False)
