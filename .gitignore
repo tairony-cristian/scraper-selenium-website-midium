@@ -1,0 +1,52 @@
+# Ambiente virtual
+months/
+venv/
+env/
+
+# Arquivos compilados Python
+__pycache__/
+*.py[cod]
+
+# Configurações de IDEs
+.idea/
+.vscode/
+
+# Arquivos de Log
+*.log
+
+# Arquivos de banco de dados local
+*.sqlite3
+notas.db
+
+# Arquivos temporários do sistema
+.DS_Store
+Thumbs.db
+
+# Arquivos de build/distribuição
+/dist/
+/build/
+*.egg-info/
+*.spec
+
+# Ambiente Pipenv
+Pipfile.lock
+
+# Arquivos de configuração do PyQt
+*.ui
+
+# Caches do Python e IDEs
+.mypy_cache/
+.pytest_cache/
+*.coverage
+.tox/
+
+# Arquivos temporários
+*.tmp
+*.swp
+
+# Arquivos de configuração do sistema
+.env
+
+# Arquivos específicos do projeto
+config.yaml
+secret_config.json
