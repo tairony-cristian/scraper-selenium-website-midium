@@ -15,7 +15,7 @@ def save_data(results, df_existing, file_name, existing_urls_set, existing_urls_
     if results:
         df_new = pd.DataFrame(results)
         df_combined = pd.concat([df_existing, df_new], ignore_index=True)
-        df_combined.to_excel(file_name, index=False)
+        df_combined.to_csv(file_name, index=False)
 
         total_saved = len(df_combined)
         print(f"Saving {len(results)} new items. Total of {total_saved} items saved to file.")
@@ -37,10 +37,10 @@ def create_driver():
 # Function to process each month's URL
 def process_month(month, driver):
     url = f"https://medium.com/tag/2023/archive/2023/{month}"
-    file_name = f"medium-{month_names[month]}.xlsx"
+    file_name = f"medium-{month_names[month]}.csv"
 
     if os.path.exists(file_name):
-        df_existing = pd.read_excel(file_name)
+        df_existing = pd.read_csv(file_name)
         # Store URLs in both a set (for fast lookup) and a list (to preserve order)
         existing_urls_list = df_existing['URL'].tolist()
         existing_urls_set = set(existing_urls_list)
@@ -160,7 +160,7 @@ month_names = {
 driver = create_driver()
 
 # Process months from December to January
-for month in range(12, 0, -1):
+for month in range(11, 0, -1):
     try:
         process_month(month, driver)
     except Exception as e:
