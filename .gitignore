@@ -50,3 +50,5 @@ Pipfile.lock
 # Arquivos específicos do projeto
 config.yaml
 secret_config.json
+*.csv
+*.xlsx

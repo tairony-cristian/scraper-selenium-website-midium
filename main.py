@@ -1,6 +1,3 @@
-
-#---------------------------- salva os arquivos de mes em mes ----------------------------------------
-
 import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -13,9 +10,9 @@ import os
 # Function to save data and display total records
 def save_data(results, df_existing, file_name, existing_urls_set, existing_urls_list):
     if results:
-        print("Pausing before saving data...")
+        print("Saving data...")
         time.sleep(2)
-        
+
         df_new = pd.DataFrame(results)
         df_combined = pd.concat([df_existing, df_new], ignore_index=True)
         df_combined.to_csv(file_name, index=False)
@@ -37,14 +34,14 @@ def create_driver():
     driver.set_script_timeout(30)
     return driver
 
-# Function to process each month's URL
+# Function to process each month's
 def process_month(month, driver):
     url = f"https://medium.com/tag/2023/archive/2023/{month}"
     file_name = f"medium-{month_names[month]}.csv"
 
+    # Load existing data
     if os.path.exists(file_name):
         df_existing = pd.read_csv(file_name)
-        # Store URLs in both a set (for fast lookup) and a list (to preserve order)
         existing_urls_list = df_existing['URL'].tolist()
         existing_urls_set = set(existing_urls_list)
         print(f"{len(df_existing)} items already saved for the month {month_names[month]}.")
@@ -58,14 +55,10 @@ def process_month(month, driver):
 
     # Scroll to last saved URL
     if existing_urls_list:
-        scroll_pause_time = 5
-        scroll_amount = 1800
         print("Scrolling to the last saved URL...")
         while True:
-            time.sleep(scroll_pause_time)
-            driver.execute_script(f"window.scrollBy(0, {scroll_amount});")
-
-            # Check if last URL is visible
+            time.sleep(5)
+            driver.execute_script("window.scrollBy(0, 1800);")
             items = driver.find_elements(By.CSS_SELECTOR, "div.l.c div:nth-child(3) > div")
             for item in items:
                 try:
@@ -79,15 +72,18 @@ def process_month(month, driver):
 
     results = []
     scroll_pause_time = 5
-    scroll_amount = 1800
-    total_saved_in_session = 0
+    last_height = driver.execute_script("return document.body.scrollHeight")
+    scroll_attempts = 0
+    max_scroll_attempts = 3  # Number of scroll attempts without changes
 
     while True:
         try:
-            driver.execute_script(f"window.scrollBy(0, {scroll_amount});")
+            driver.execute_script("window.scrollBy(0, 2400);")
             time.sleep(scroll_pause_time)
 
             items = driver.find_elements(By.CSS_SELECTOR, "div.l.c div:nth-child(3) > div")
+            if not items:  # Stop if no items found
+                break
 
             for item in items:
                 data = {}
@@ -116,13 +112,26 @@ def process_month(month, driver):
                     results.append(data)
                     existing_urls_set.add(data['URL'])
                     existing_urls_list.append(data['URL'])
-                    total_saved_in_session += 1
 
-                if len(results) >= 100:  # Save every 100 records
+                # Saves every 20 records
+                if len(results) >= 20:
                     df_existing, existing_urls_set, existing_urls_list = save_data(results, df_existing, file_name, existing_urls_set, existing_urls_list)
 
+            # Check page height to avoid infinite loops
             new_height = driver.execute_script("return document.body.scrollHeight")
+
+            if new_height == last_height:
+                 scroll_attempts += 1
+                 print(f"No change in page height. Attempt {scroll_attempts}/{max_scroll_attempts}.")
+            else:
+                scroll_attempts = 0  # Restart count if page changed
+                
             last_height = new_height
+
+          # If attempts to scroll without changing exceed the limit, stop
+            if scroll_attempts >= max_scroll_attempts:
+                print("Max scroll attempts reached without any change. Stopping.")
+                break  
 
         except (NoSuchWindowException, TimeoutException) as e:
             print(f"Error encountered: {str(e)}. Restarting browser session...")
@@ -133,15 +142,12 @@ def process_month(month, driver):
             driver.maximize_window()
             last_height = 0
 
-        # Stop scrolling if no more items are loaded
-        if len(items) == 0:
-            break
-
-    # Save any remaining data after processing
+    # Saves remaining data after processing
     if results:
         df_existing, existing_urls_set, existing_urls_list = save_data(results, df_existing, file_name, existing_urls_set, existing_urls_list)
 
-    print(f"Month {month_names[month]} completed. Total saved in this session: {total_saved_in_session}")
+    print(f"Month {month_names[month]} completed.")
+    
 
 # Month mapping
 month_names = {
@@ -159,15 +165,21 @@ month_names = {
     1: "january"
 }
 
-# Initialize driver
+# Initialize the driver
 driver = create_driver()
+start_time = time.time()  # Start time for time control
 
-# Process months from December to January
-for month in range(11, 0, -1):
+# Processes the months of December to January
+for month in range(9, 0, -1):
     try:
+        print(f"Starting processing for the month {month_names[month]}...")
         process_month(month, driver)
     except Exception as e:
         print(f"Error processing month {month_names[month]}: {str(e)}")
 
 driver.quit()
 
+end_time = time.time()
+total_time = end_time - start_time
+total_minutes = total_time / 60
+print(f"Processing completed! Total time: {total_minutes:.2f} minutes.")
